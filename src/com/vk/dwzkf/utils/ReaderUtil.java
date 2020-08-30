@@ -50,10 +50,12 @@ public class ReaderUtil extends AbstractThread {
 
     public void sendMessage(String message) {
         writer.print(message);
+        writer.flush();
     }
 
     public void sendMessageLn(String message) {
         writer.println(message);
+        writer.flush();
     }
 
     public String getMessage() {
