@@ -58,7 +58,14 @@ public class Server extends AbstractThread {
     }
 
     public boolean checkUser(String userName, String password) {
-        return true;
+        if (userName.equals("fkzwd") && password.equals("fkzwd")) {
+            System.out.println("[User connected]: "+userName);
+            System.out.println("[Current users count]: "+connections.size());
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     public void onNewConnection(Socket socket) {
@@ -70,5 +77,7 @@ public class Server extends AbstractThread {
 
     public void closeConnection(Connection connection) {
         connections.remove(connection);
+        System.out.println("[User removed]: "+connection.getUserName());
+        System.out.println("[Current users size]: "+connections.size());
     }
 }

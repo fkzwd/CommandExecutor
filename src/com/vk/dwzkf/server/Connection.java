@@ -19,7 +19,9 @@ public class Connection extends AbstractThread {
     @Override
     public boolean setUpActions() {
         try {
+            socket.setSoTimeout(300000);
             readerUtil = new ReaderUtil(socket.getInputStream(), socket.getOutputStream());
+            readerUtil.setUpActions();
             return true;
         }
         catch (Exception e) {
@@ -30,28 +32,44 @@ public class Connection extends AbstractThread {
 
     @Override
     public void preMain() {
-        readerUtil.sendMessage("username: ");
-        String userName = readerUtil.getMessage();
-        readerUtil.sendMessage("password: ");
-        String password = readerUtil.getMessage();
-        if (!owner.checkUser(userName, password)) {
-            this.setStopped(true);
-            readerUtil.sendMessageLn("[ERROR]: No such user with such password.");
-            return;
+        try {
+            readerUtil.sendMessage("username: ");
+            String userName = readerUtil.getMessage();
+            readerUtil.sendMessage("password: ");
+            String password = readerUtil.getMessage();
+            if (!owner.checkUser(userName, password)) {
+                this.setStopped(true);
+                readerUtil.sendMessage("[ERROR]: No such user with such password.");
+                return;
+            }
+            setUserName(userName);
+            readerUtil.sendMessage("[SUCCESS] You are logged in.");
         }
-        setUserName(userName);
+        catch (Exception e) {
+            setStopped(true);
+        }
     }
 
     @Override
     public void mainActions() {
-        String s = readerUtil.getMessage();
-        processMessage(s);
+        try {
+            if (socket.isClosed()) {
+                setStopped(true);
+            }
+            else {
+                String s = readerUtil.getMessage();
+                processMessage(s);
+            }
+        }
+        catch (Exception e) {
+            setStopped(true);
+        }
     }
 
 
     @Override
     public void postMain() {
-
+        readerUtil.sendMessage("[SERVER] Good bye!");
     }
 
     @Override
@@ -67,7 +85,7 @@ public class Connection extends AbstractThread {
     }
 
     private void processMessage(String message) {
-
+        readerUtil.sendMessage("[SERVER] message received:"+message);
     }
 
     private void setUserName(String userName) {
