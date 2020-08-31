@@ -28,7 +28,16 @@ public class Server extends AbstractThread {
 
     public Server(int port) {
         this.port = port;
-        serverProperties.put("ip","localhost");
+        InetAddress inetAddress;
+        String hostAddress = "localhost";
+        try {
+            inetAddress = InetAddress.getLocalHost();
+            hostAddress = inetAddress.getHostAddress();
+        }
+        catch (Exception e) {
+            System.out.println("[ERROR] cant get host addr. Setted to localhost.");
+        }
+        serverProperties.put("ip",hostAddress);
         serverProperties.put("port","6689");
         serverProperties.put("username","admin");
         serverProperties.put("password","admin");
@@ -84,7 +93,7 @@ public class Server extends AbstractThread {
             c.shutdown();
         }
         try {
-            serverSocket.close();
+            if (serverSocket!=null) serverSocket.close();
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -129,8 +138,16 @@ public class Server extends AbstractThread {
         InputStream inputStream = Files.newInputStream(file);
         serverProperties.load(inputStream);
         inputStream.close();
+        String hostAddress = "localhost";
+        try {
+            inetAddress = InetAddress.getLocalHost();
+            hostAddress = inetAddress.getHostAddress();
+        }
+        catch (Exception e) {
+            System.out.println("[ERROR] cant get host addr. Setted to localhost.");
+        }
         maxConnections = Integer.parseInt(serverProperties.getProperty("maxconnections", "10"));
-        inetAddress = InetAddress.getByName(serverProperties.getProperty("ip", "localhost"));
+        inetAddress = InetAddress.getByName(serverProperties.getProperty("ip", hostAddress));
         admin.setUsername(serverProperties.getProperty("username", "admin"));
         admin.setPassword(serverProperties.getProperty("password", "admin"));
         port = Integer.parseInt(serverProperties.getProperty("port", "6689"));
