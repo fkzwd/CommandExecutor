@@ -40,8 +40,12 @@ public class ReaderUtil extends AbstractThread {
     @Override
     public void closeActions() {
         try {
-            reader.close();
-            writer.close();
+            if (reader!=null) {
+                reader.close();
+            }
+            if (writer!=null) {
+                writer.close();
+            }
         }
         catch (Exception e) {
 

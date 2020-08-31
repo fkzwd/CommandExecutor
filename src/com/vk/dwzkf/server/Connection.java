@@ -3,6 +3,7 @@ package com.vk.dwzkf.server;
 import com.vk.dwzkf.thread.AbstractThread;
 import com.vk.dwzkf.utils.ReaderUtil;
 
+import java.io.IOException;
 import java.net.Socket;
 
 public class Connection extends AbstractThread {
@@ -10,6 +11,8 @@ public class Connection extends AbstractThread {
     private String userName;
     private Server owner;
     private ReaderUtil readerUtil;
+    private Process process;
+    private ReaderUtil processReader;
 
     public Connection(Server owner, Socket socket) {
         this.socket = socket;
@@ -40,10 +43,30 @@ public class Connection extends AbstractThread {
             if (!owner.checkUser(userName, password)) {
                 this.setStopped(true);
                 readerUtil.sendMessage("[ERROR]: No such user with such password.");
+                readerUtil.sendMessage("[ERROR]: Or admin already connected.");
                 return;
             }
             setUserName(userName);
             readerUtil.sendMessage("[SUCCESS] You are logged in.");
+
+            process = Runtime.getRuntime().exec("cmd");
+            processReader = new ReaderUtil(process.getInputStream(), process.getOutputStream()) {
+                @Override
+                public void mainActions() {
+                    try {
+                        String s;
+                        while ((s=processReader.getMessage()) != null) {
+                            readerUtil.sendMessage("[Executor]: "+s);
+                        }
+                        setStopped(true);
+                    }
+                    catch (Exception e) {
+                        setStopped(true);
+                    }
+                }
+            };
+            processReader.setUp();
+            processReader.start();
         }
         catch (Exception e) {
             setStopped(true);
@@ -53,7 +76,7 @@ public class Connection extends AbstractThread {
     @Override
     public void mainActions() {
         try {
-            if (socket.isClosed()) {
+            if (socket.isOutputShutdown()) {
                 setStopped(true);
             }
             else {
@@ -74,18 +97,26 @@ public class Connection extends AbstractThread {
 
     @Override
     public void closeActions() {
+        owner.closeConnection(this);
         readerUtil.closeActions();
+        if (processReader!=null) {
+            processReader.closeActions();
+        }
         try {
             socket.close();
+            process.destroyForcibly();
         }
         catch (Exception e) {
 
         }
-        owner.closeConnection(this);
     }
 
     private void processMessage(String message) {
-        readerUtil.sendMessage("[SERVER] message received:"+message);
+        if (message.equals("exit")) {
+            this.setStopped(true);
+            return;
+        }
+        processReader.sendMessage(message);
     }
 
     private void setUserName(String userName) {

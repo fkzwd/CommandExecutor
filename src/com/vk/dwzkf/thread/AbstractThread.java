@@ -26,6 +26,7 @@ public abstract class AbstractThread extends Thread {
             closeActions();
         }
         catch (Exception e) {
+            isStopped=true;
             postMain();
             closeActions();
         }
