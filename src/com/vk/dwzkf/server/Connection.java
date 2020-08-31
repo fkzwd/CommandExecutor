@@ -66,6 +66,11 @@ public class Connection extends AbstractThread {
                         setStopped(true);
                     }
                 }
+
+                @Override
+                public void closeActions() {
+
+                }
             };
             processReader.setUp();
             processReader.start();
@@ -103,7 +108,7 @@ public class Connection extends AbstractThread {
         owner.closeConnection(this);
         readerUtil.shutdown();
         if (processReader!=null) {
-            processReader.shutdown();
+            processReader.setStopped(true);
         }
         try {
             socket.close();
