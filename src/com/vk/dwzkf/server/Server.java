@@ -38,7 +38,8 @@ public class Server extends AbstractThread {
         try {
             inetAddress = InetAddress.getByName("localhost");
             try {
-                serverProperties.load(Files.newInputStream(Paths.get("cfg/server.properties")));
+                ClassLoader cl = this.getClass().getClassLoader();
+                serverProperties.load(cl.getResourceAsStream("cfg/server.properties"));
                 maxConnections = Integer.parseInt(serverProperties.getProperty("maxconnections"));
                 inetAddress = InetAddress.getByName(serverProperties.getProperty("ip"));
                 admin.setUsername(serverProperties.getProperty("username"));
@@ -52,6 +53,7 @@ public class Server extends AbstractThread {
             return true;
         }
         catch (Exception e) {
+            System.out.println("Cannot start server. Probably port "+port+" not available.");
             return false;
         }
     }
