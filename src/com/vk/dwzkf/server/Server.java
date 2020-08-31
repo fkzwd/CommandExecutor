@@ -60,6 +60,7 @@ public class Server extends AbstractThread {
         }
         catch (Exception e) {
             System.out.println("Cannot start server. Probably port "+port+" not available.");
+            System.out.println("Delete server.cfg and try again. Probably its broken.");
             return false;
         }
     }
