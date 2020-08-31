@@ -36,10 +36,10 @@ public class Connection extends AbstractThread {
     @Override
     public void preMain() {
         try {
-            readerUtil.sendMessage("username: ");
+            readerUtil.sendMessage("Print USERNAME: ");
             String userName = readerUtil.getMessage();
             System.out.println("[SERVER] accept message: "+userName);
-            readerUtil.sendMessage("password: ");
+            readerUtil.sendMessage("Print PASSWORD: ");
             String password = readerUtil.getMessage();
             System.out.println("[SERVER] accept message: "+password);
             if (!owner.checkUser(userName, password)) {

@@ -3,6 +3,7 @@ package com.vk.dwzkf.server;
 import com.vk.dwzkf.admin.Admin;
 import com.vk.dwzkf.thread.AbstractThread;
 
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -29,8 +30,8 @@ public class Server extends AbstractThread {
         this.port = port;
         serverProperties.put("ip","localhost");
         serverProperties.put("port","6689");
-        serverProperties.put("username","fkzwd");
-        serverProperties.put("password","password");
+        serverProperties.put("username","admin");
+        serverProperties.put("password","admin");
         serverProperties.put("maxconnections","10");
         admin = new Admin(serverProperties.getProperty("username"), serverProperties.getProperty("password"));
     }
@@ -125,12 +126,14 @@ public class Server extends AbstractThread {
             serverProperties.store(outputStream, "To change property enter \"set <key> <value>\" ");
             outputStream.close();
         }
-        serverProperties.load(Files.newInputStream(file));
-        maxConnections = Integer.parseInt(serverProperties.getProperty("maxconnections"));
-        inetAddress = InetAddress.getByName(serverProperties.getProperty("ip"));
-        admin.setUsername(serverProperties.getProperty("username"));
-        admin.setPassword(serverProperties.getProperty("password"));
-        port = Integer.parseInt(serverProperties.getProperty("port"));
+        InputStream inputStream = Files.newInputStream(file);
+        serverProperties.load(inputStream);
+        inputStream.close();
+        maxConnections = Integer.parseInt(serverProperties.getProperty("maxconnections", "10"));
+        inetAddress = InetAddress.getByName(serverProperties.getProperty("ip", "localhost"));
+        admin.setUsername(serverProperties.getProperty("username", "admin"));
+        admin.setPassword(serverProperties.getProperty("password", "admin"));
+        port = Integer.parseInt(serverProperties.getProperty("port", "6689"));
     }
 
     public void showInfo() {

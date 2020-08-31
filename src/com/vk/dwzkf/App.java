@@ -27,6 +27,9 @@ public class App {
                     server.setUp();
                     server.start();
                 }
+                else if (s.equals("config")) {
+                    server.showInfo();
+                }
                 else if (s.matches("set [a-zA-Z]+ [a-zA-Z0-9.]+")) {
                     String[] split = s.split(" ");
                     server.saveProperty(split[1], split[2]);
