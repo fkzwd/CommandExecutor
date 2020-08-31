@@ -26,6 +26,7 @@ public abstract class AbstractThread extends Thread {
             closeActions();
         }
         catch (Exception e) {
+            e.printStackTrace();
             isStopped=true;
             postMain();
             closeActions();
@@ -36,6 +37,11 @@ public abstract class AbstractThread extends Thread {
     public synchronized void start() {
         if (isStopped) return;
         super.start();
+    }
+
+    public void shutdown() {
+        setStopped(true);
+        closeActions();
     }
 
     public abstract boolean setUpActions();

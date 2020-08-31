@@ -98,16 +98,16 @@ public class Connection extends AbstractThread {
     @Override
     public void closeActions() {
         owner.closeConnection(this);
-        readerUtil.closeActions();
+        readerUtil.shutdown();
         if (processReader!=null) {
-            processReader.closeActions();
+            processReader.shutdown();
         }
         try {
             socket.close();
             process.destroyForcibly();
         }
         catch (Exception e) {
-
+            e.printStackTrace();
         }
     }
 

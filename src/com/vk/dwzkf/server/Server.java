@@ -3,10 +3,12 @@ package com.vk.dwzkf.server;
 import com.vk.dwzkf.admin.Admin;
 import com.vk.dwzkf.thread.AbstractThread;
 
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -38,13 +40,7 @@ public class Server extends AbstractThread {
         try {
             inetAddress = InetAddress.getByName("localhost");
             try {
-                ClassLoader cl = this.getClass().getClassLoader();
-                serverProperties.load(cl.getResourceAsStream("cfg/server.properties"));
-                maxConnections = Integer.parseInt(serverProperties.getProperty("maxconnections"));
-                inetAddress = InetAddress.getByName(serverProperties.getProperty("ip"));
-                admin.setUsername(serverProperties.getProperty("username"));
-                admin.setPassword(serverProperties.getProperty("password"));
-                port = Integer.parseInt(serverProperties.getProperty("port"));
+                loadProperties();
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -61,10 +57,7 @@ public class Server extends AbstractThread {
     @Override
     public void preMain() {
         System.out.println("Server started.");
-        System.out.println("Server ip: "+serverSocket.getInetAddress().toString());
-        System.out.println("Server port: "+serverSocket.getLocalPort());
-        System.out.println("ADMIN username: "+admin.getUsername());
-        System.out.println("ADMIN password: "+admin.getPassword());
+        showInfo();
     }
 
     @Override
@@ -74,18 +67,27 @@ public class Server extends AbstractThread {
             onNewConnection(socket);
         }
         catch (Exception e) {
-
+            e.printStackTrace();
+            setStopped(true);
         }
     }
 
     @Override
     public void postMain() {
-
+        System.out.println("[Server stopped]");
     }
 
     @Override
     public void closeActions() {
-
+        for (Connection c : connections) {
+            c.shutdown();
+        }
+        try {
+            serverSocket.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public boolean checkUser(String userName, String password) {
@@ -109,9 +111,51 @@ public class Server extends AbstractThread {
     }
 
     public void closeConnection(Connection connection) {
-        connections.remove(connection);
+        if (!connections.remove(connection)) return;
         System.out.println("[User removed]: "+connection.getUserName());
         System.out.println("[Current users size]: "+connections.size());
         admin.setConnected(false);
+    }
+
+    public void loadProperties() throws Exception {
+        Path file = Paths.get("server.cfg");
+        if (!Files.exists(file)) {
+            Files.createFile(file);
+            OutputStream outputStream = Files.newOutputStream(file);
+            serverProperties.store(outputStream, "To change property enter \"set <key> <value>\" ");
+            outputStream.close();
+        }
+        serverProperties.load(Files.newInputStream(file));
+        maxConnections = Integer.parseInt(serverProperties.getProperty("maxconnections"));
+        inetAddress = InetAddress.getByName(serverProperties.getProperty("ip"));
+        admin.setUsername(serverProperties.getProperty("username"));
+        admin.setPassword(serverProperties.getProperty("password"));
+        port = Integer.parseInt(serverProperties.getProperty("port"));
+    }
+
+    public void showInfo() {
+        System.out.println("Server ip: "+serverSocket.getInetAddress().toString());
+        System.out.println("Server port: "+serverSocket.getLocalPort());
+        System.out.println("ADMIN username: "+admin.getUsername());
+        System.out.println("ADMIN password: "+admin.getPassword());
+    }
+
+    public void saveProperty(String key, String value) {
+        if (serverProperties.getProperty(key)==null) {
+            return;
+        }
+        serverProperties.setProperty(key,value);
+        try {
+            Path file = Paths.get("server.cfg");
+            Files.deleteIfExists(file);
+            Files.createFile(file);
+            OutputStream out = Files.newOutputStream(file);
+            serverProperties.store(out, "To change property enter \"set <key> <value>\" ");
+            out.close();
+            System.out.println("Property was setted.");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
