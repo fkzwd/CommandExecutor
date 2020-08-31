@@ -38,8 +38,10 @@ public class Connection extends AbstractThread {
         try {
             readerUtil.sendMessage("username: ");
             String userName = readerUtil.getMessage();
+            System.out.println("[SERVER] accept message: "+userName);
             readerUtil.sendMessage("password: ");
             String password = readerUtil.getMessage();
+            System.out.println("[SERVER] accept message: "+password);
             if (!owner.checkUser(userName, password)) {
                 this.setStopped(true);
                 readerUtil.sendMessage("[ERROR]: No such user with such password.");
@@ -67,6 +69,7 @@ public class Connection extends AbstractThread {
             };
             processReader.setUp();
             processReader.start();
+            processReader.sendMessage("chcp 65001");
         }
         catch (Exception e) {
             setStopped(true);
@@ -104,7 +107,9 @@ public class Connection extends AbstractThread {
         }
         try {
             socket.close();
-            process.destroyForcibly();
+            if (process!=null) {
+                process.destroyForcibly();
+            }
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -112,6 +117,7 @@ public class Connection extends AbstractThread {
     }
 
     private void processMessage(String message) {
+        System.out.println("[SERVER] accept message: "+message);
         if (message.equals("exit")) {
             this.setStopped(true);
             return;
