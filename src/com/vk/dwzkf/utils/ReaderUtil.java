@@ -17,8 +17,8 @@ public class ReaderUtil extends AbstractThread {
 
     @Override
     public boolean setUpActions() {
-        reader = new BufferedReader(new InputStreamReader(in));
-        writer = new PrintWriter(new OutputStreamWriter(out));
+        if (in!=null) reader = new BufferedReader(new InputStreamReader(in));
+        if (out!=null) writer = new PrintWriter(new OutputStreamWriter(out));
         return true;
     }
 
@@ -54,11 +54,16 @@ public class ReaderUtil extends AbstractThread {
     }
 
     public void sendMessage(String message) {
-        writer.println(message);
-        writer.flush();
+        if (writer!=null) {
+            writer.println(message);
+            writer.flush();
+        }
     }
 
     public String getMessage() throws Exception {
-        return reader.readLine();
+        if (reader!=null)
+            return reader.readLine();
+        else
+            return null;
     }
 }

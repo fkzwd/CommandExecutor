@@ -13,6 +13,7 @@ public class Connection extends AbstractThread {
     private ReaderUtil readerUtil;
     private Process process;
     private ReaderUtil processReader;
+    private ReaderUtil processExceptionReader;
 
     public Connection(Server owner, Socket socket) {
         this.socket = socket;
@@ -36,10 +37,11 @@ public class Connection extends AbstractThread {
     @Override
     public void preMain() {
         try {
-            readerUtil.sendMessage("Print USERNAME: ");
+            readerUtil.sendMessage("Please log in.");
+            readerUtil.sendMessage("USERNAME: ");
             String userName = readerUtil.getMessage();
             System.out.println("[SERVER] accept message: "+userName);
-            readerUtil.sendMessage("Print PASSWORD: ");
+            readerUtil.sendMessage("PASSWORD: ");
             String password = readerUtil.getMessage();
             System.out.println("[SERVER] accept message: "+password);
             if (!owner.checkUser(userName, password)) {
@@ -57,8 +59,8 @@ public class Connection extends AbstractThread {
                 public void mainActions() {
                     try {
                         String s;
-                        while ((s=processReader.getMessage()) != null) {
-                            readerUtil.sendMessage("[Executor]: "+s);
+                        while ((s=getMessage()) != null) {
+                            if (!s.isBlank()) readerUtil.sendMessage(s);
                         }
                         setStopped(true);
                     }
@@ -75,6 +77,29 @@ public class Connection extends AbstractThread {
             processReader.setUp();
             processReader.start();
             processReader.sendMessage("chcp 65001");
+
+            processExceptionReader = new ReaderUtil(process.getErrorStream(), null) {
+                @Override
+                public void mainActions() {
+                    try {
+                        String s;
+                        while ((s=getMessage()) != null) {
+                            if (!s.isBlank()) readerUtil.sendMessage(s);
+                        }
+                        setStopped(true);
+                    }
+                    catch (Exception e) {
+                        setStopped(true);
+                    }
+                }
+
+                @Override
+                public void closeActions() {
+
+                }
+            };
+            processExceptionReader.setUp();
+            processExceptionReader.start();
         }
         catch (Exception e) {
             setStopped(true);
@@ -109,6 +134,9 @@ public class Connection extends AbstractThread {
         readerUtil.shutdown();
         if (processReader!=null) {
             processReader.setStopped(true);
+        }
+        if (processExceptionReader!=null) {
+            processExceptionReader.setStopped(true);
         }
         try {
             socket.close();
