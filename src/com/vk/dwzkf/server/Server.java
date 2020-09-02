@@ -28,20 +28,6 @@ public class Server extends AbstractThread {
 
     public Server(int port) {
         this.port = port;
-        InetAddress inetAddress;
-        String hostAddress = "localhost";
-        try {
-            inetAddress = InetAddress.getLocalHost();
-            hostAddress = inetAddress.getHostAddress();
-        }
-        catch (Exception e) {
-            System.out.println("[ERROR] cant get host addr. Setted to localhost.");
-        }
-        serverProperties.put("ip",hostAddress);
-        serverProperties.put("port","6689");
-        serverProperties.put("username","admin");
-        serverProperties.put("password","admin");
-        serverProperties.put("maxconnections","10");
         admin = new Admin(serverProperties.getProperty("username"), serverProperties.getProperty("password"));
     }
 
@@ -53,14 +39,14 @@ public class Server extends AbstractThread {
                 loadProperties();
             }
             catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("[ERROR] Bad server configuration.");
             }
             serverSocket = new ServerSocket(port, maxConnections, inetAddress);
             return true;
         }
         catch (Exception e) {
             System.out.println("Cannot start server. Probably port "+port+" not available.");
-            System.out.println("Delete server.cfg and try again. Probably its broken.");
+            System.out.println("Try to print \"reset config\".");
             return false;
         }
     }
@@ -78,7 +64,7 @@ public class Server extends AbstractThread {
             onNewConnection(socket);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
             setStopped(true);
         }
     }
@@ -148,14 +134,20 @@ public class Server extends AbstractThread {
             System.out.println("[ERROR] cant get host addr. Setted to localhost.");
         }
         maxConnections = Integer.parseInt(serverProperties.getProperty("maxconnections", "10"));
-        inetAddress = InetAddress.getByName(serverProperties.getProperty("ip", hostAddress));
+        try {
+            inetAddress = InetAddress.getByName(serverProperties.getProperty("ip", hostAddress));
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("[ERROR] Unknown host. Server ip set to default.");
+        }
         admin.setUsername(serverProperties.getProperty("username", "admin"));
         admin.setPassword(serverProperties.getProperty("password", "admin"));
         port = Integer.parseInt(serverProperties.getProperty("port", "6689"));
     }
 
     public void showInfo() {
-        System.out.println("Server ip: "+serverSocket.getInetAddress().toString());
+        System.out.println("Server ip: "+serverSocket.getInetAddress().getHostAddress());
         System.out.println("Server port: "+serverSocket.getLocalPort());
         System.out.println("ADMIN username: "+admin.getUsername());
         System.out.println("ADMIN password: "+admin.getPassword());
@@ -163,6 +155,7 @@ public class Server extends AbstractThread {
 
     public void saveProperty(String key, String value) {
         if (serverProperties.getProperty(key)==null) {
+            System.out.println("[ERROR] property <"+key+"> not exists.");
             return;
         }
         serverProperties.setProperty(key,value);
@@ -173,10 +166,43 @@ public class Server extends AbstractThread {
             OutputStream out = Files.newOutputStream(file);
             serverProperties.store(out, "To change property enter \"set <key> <value>\" ");
             out.close();
-            System.out.println("Property was setted.");
+            System.out.println("Property set: "+key+" = "+value);
         }
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void resetConfig() {
+        setDefaultConfig();
+        try {
+            Path file = Paths.get("server.cfg");
+            Files.deleteIfExists(file);
+            Files.createFile(file);
+            OutputStream out = Files.newOutputStream(file);
+            serverProperties.store(out, "To change property enter \"set <key> <value>\" ");
+            out.close();
+            System.out.println("Configuration reset successfully.");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setDefaultConfig(){
+        InetAddress inetAddress;
+        String hostAddress = "localhost";
+        try {
+            inetAddress = InetAddress.getLocalHost();
+            hostAddress = inetAddress.getHostAddress();
+        }
+        catch (Exception e) {
+            System.out.println("[ERROR] cant get host addr. Setted to localhost.");
+        }
+        serverProperties.put("ip",hostAddress);
+        serverProperties.put("port","6689");
+        serverProperties.put("username","admin");
+        serverProperties.put("password","admin");
+        serverProperties.put("maxconnections","10");
     }
 }

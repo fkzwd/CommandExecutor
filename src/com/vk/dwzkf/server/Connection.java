@@ -117,6 +117,7 @@ public class Connection extends AbstractThread {
             }
         }
         catch (Exception e) {
+            System.out.println("[ERROR] Socket not exists or already closed.");
             e.printStackTrace();
         }
     }
