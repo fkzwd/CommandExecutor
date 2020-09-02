@@ -28,6 +28,7 @@ public class Server extends AbstractThread {
 
     public Server(int port) {
         this.port = port;
+        setDefaultConfig();
         admin = new Admin(serverProperties.getProperty("username"), serverProperties.getProperty("password"));
     }
 
