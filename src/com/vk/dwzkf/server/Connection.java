@@ -5,6 +5,7 @@ import com.vk.dwzkf.utils.ReaderUtil;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.function.Consumer;
 
 public class Connection extends AbstractThread {
     private Socket socket;
@@ -141,6 +142,7 @@ public class Connection extends AbstractThread {
         try {
             socket.close();
             if (process!=null) {
+                process.children().forEach(ProcessHandle::destroyForcibly);
                 process.destroyForcibly();
             }
         }
