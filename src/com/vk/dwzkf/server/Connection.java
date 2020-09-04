@@ -2,6 +2,8 @@ package com.vk.dwzkf.server;
 
 import com.vk.dwzkf.thread.AbstractThread;
 import com.vk.dwzkf.utils.ReaderUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -15,6 +17,7 @@ public class Connection extends AbstractThread {
     private Process process;
     private ReaderUtil processReader;
     private ReaderUtil processExceptionReader;
+    private static Logger logger = LogManager.getLogger(Connection.class);
 
     public Connection(Server owner, Socket socket) {
         this.socket = socket;
@@ -41,10 +44,8 @@ public class Connection extends AbstractThread {
             readerUtil.sendMessage("Please log in.");
             readerUtil.sendMessage("USERNAME: ");
             String userName = readerUtil.getMessage();
-            System.out.println("[SERVER] accept message: "+userName);
             readerUtil.sendMessage("PASSWORD: ");
             String password = readerUtil.getMessage();
-            System.out.println("[SERVER] accept message: "+password);
             if (!owner.checkUser(userName, password)) {
                 this.setStopped(true);
                 readerUtil.sendMessage("[ERROR]: No such user with such password.");
@@ -52,6 +53,7 @@ public class Connection extends AbstractThread {
                 return;
             }
             setUserName(userName);
+            setName(getName()+" :"+userName);
             readerUtil.sendMessage("[SUCCESS] You are logged in.");
 
             process = Runtime.getRuntime().exec("cmd");
@@ -147,13 +149,12 @@ public class Connection extends AbstractThread {
             }
         }
         catch (Exception e) {
-            System.out.println("[ERROR] Socket not exists or already closed.");
-            e.printStackTrace();
+            logger.error("Socket not exists or already closed.",e);
         }
     }
 
     private void processMessage(String message) {
-        System.out.println("[SERVER] accept message: "+message);
+        logger.info("Server accept message:"+message);
         if (message.equals("exit")) {
             this.setStopped(true);
             return;
